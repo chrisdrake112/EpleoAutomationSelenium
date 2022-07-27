@@ -13,12 +13,13 @@ import java.time.Duration;
 
 public class AcceptanceTest {
         @Test
-        public void Test() {
+        public void Test() throws Exception {
+
             WebDriver driver = new ChromeDriver();
             String[] currencies = {"EUR","USD","GBP","JPY","CAD"};
             System.setProperty("webdriver.chrome.driver", "opt/homebrew/bin/chromedriver");
             driver.get("https://www.xe.com/currencyconverter/");
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
             for(int i = 0;i<currencies.length;i++) {
 
@@ -27,9 +28,9 @@ public class AcceptanceTest {
                     int k = j;
                     k ++;
 
-                    WebElement amount;
-                    amount = driver.findElement(By.id("amount"));
-                    new Actions(driver).sendKeys(amount, String.valueOf(k)).perform();
+                    WebElement amount = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("amount")));
+                    //amount = driver.findElement(By.id("amount"));
+                    new Actions(driver).sendKeys(amount, "1"/*String.valueOf(k)*/).perform();
 
                     WebElement toButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("midmarketToCurrency")));
                     new Actions(driver).click(toButton).perform();
@@ -41,18 +42,22 @@ public class AcceptanceTest {
 
                     //WebElement convertBtn;
                     WebElement convertBtn = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("/html/body/div[1]/div[2]/div[2]/section/div[2]/div/main/form/div[2]/button")));
-                    //convertBtn = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div[2]/section/div[2]/div/main/form/div[2]/button"));
                     new Actions(driver).click(convertBtn).perform();
 
                     String result = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//*[@id=\"__next\"]/div[2]/div[2]/section/div[2]/div/main/form/div[2]/div[1]/p[2]"))).getText();
-                    //WebElement ResultTwo = driver.findElement(By.xpath("/html/body/div[1]/div[2]/div[2]/section/div[2]/div/main/form/div[2]/div[1]/p[2]/text()[2]"));//.getAttribute("");
 
                     String conversionRate = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//*[@id=\"__next\"]/div[2]/div[2]/section/div[2]/div/main/form/div[2]/div[3]/div[1]/div[1]/p"))).getText();
 
-                    String newResult = result.replaceAll("([aA-zZ])","");
-                    System.out.println(newResult);
-                    System.out.println(conversionRate);
+                    result = result.replaceAll("([aA-zZ])","");
 
+                    conversionRate = conversionRate.split("=")[1];
+                    conversionRate = conversionRate.replaceAll("([aA-zZ])","");
+
+                    Double resultRounded = (double) Math.round(Float.parseFloat(result) * 100000d) / 10000d;
+                    Double doubleConversionRate = Double.parseDouble(conversionRate);
+                    Double ValidationResult = 1 * doubleConversionRate;
+                    System.out.println(resultRounded);
+                    System.out.println(ValidationResult);
 
                     driver.get("https://www.xe.com/currencyconverter/");
 
