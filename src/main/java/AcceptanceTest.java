@@ -1,3 +1,4 @@
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.By;
@@ -55,10 +56,12 @@ public class AcceptanceTest {
 
                     Double resultRounded = (double) Math.round(Float.parseFloat(result) * 100000d) / 10000d;
                     Double doubleConversionRate = Double.parseDouble(conversionRate);
-                    Double ValidationResult = 1 * doubleConversionRate;
-                    System.out.println(resultRounded);
-                    System.out.println(ValidationResult);
+                    Double validationResult = 1 / doubleConversionRate;
+                    Double roundedValidationResult =  Math.round(validationResult) * 100000d / 10000d;
+                    System.out.println("Result" + resultRounded);
+                    System.out.println("converstion rate" + roundedValidationResult);
 
+                    Assert.assertEquals(resultRounded,roundedValidationResult);
                     driver.get("https://www.xe.com/currencyconverter/");
 
                 }
