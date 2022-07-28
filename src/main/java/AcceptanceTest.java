@@ -14,59 +14,73 @@ import java.time.Duration;
 
 public class AcceptanceTest {
         @Test
-        public void Test() throws Exception {
+        public void ConvertionTest() {
 
+            //Chome web driver
             WebDriver driver = new ChromeDriver();
-            String[] currencies = {"EUR","USD","GBP","JPY","CAD"};
+            //Two currency lists
+            String[] currenciesListOne = {"EUR","USD","GBP","JPY","CAD"};
+            String[] currenciesListTwo = {"CAD","JPY","GBP","USD","EUR"};
+
+            //set location of chrome web driver
             System.setProperty("webdriver.chrome.driver", "opt/homebrew/bin/chromedriver");
             driver.get("https://www.xe.com/currencyconverter/");
+            //web driver wait duration
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 
-            for(int i = 0;i<currencies.length;i++) {
+            for(int i = 0;i<currenciesListOne.length;i++) {
 
-                for(int j = 0;j<currencies.length;j++) {
+                int k = i;
+                k ++;
 
-                    int k = j;
-                    k ++;
+                //find select the first currency value box
+                WebElement amount = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("amount")));
+                //amount = driver.findElement(By.id("amount"));
+                new Actions(driver).sendKeys(amount, "1"/*String.valueOf(k)*/).perform();
 
-                    WebElement amount = wait.until(ExpectedConditions.presenceOfElementLocated(By.id("amount")));
-                    //amount = driver.findElement(By.id("amount"));
-                    new Actions(driver).sendKeys(amount, "1"/*String.valueOf(k)*/).perform();
+                //select the third to currency box
+                WebElement toButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("midmarketToCurrency")));
+                new Actions(driver).click(toButton).perform();
+                new Actions(driver).sendKeys(toButton,currenciesListOne[i] + Keys.ENTER).perform();
 
-                    WebElement toButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("midmarketToCurrency")));
-                    new Actions(driver).click(toButton).perform();
-                    new Actions(driver).sendKeys(toButton,currencies[i] + Keys.ENTER).perform();
+                //select the second from currency box
+                WebElement fromButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("midmarketFromCurrency")));
+                new Actions(driver).click(fromButton).perform();
+                new Actions(driver).sendKeys(fromButton, currenciesListTwo[i] + Keys.ENTER).perform();
 
-                    WebElement fromButton = wait.until(ExpectedConditions.elementToBeClickable(By.id("midmarketFromCurrency")));
-                    new Actions(driver).click(fromButton).perform();
-                    new Actions(driver).sendKeys(fromButton, currencies[j] + Keys.ENTER).perform();
+                //WebElement convertBtn;
+                //use xpath to select convert button
+                WebElement convertBtn = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("/html/body/div[1]/div[2]/div[2]/section/div[2]/div/main/form/div[2]/button")));
+                new Actions(driver).click(convertBtn).perform();
 
-                    //WebElement convertBtn;
-                    WebElement convertBtn = wait.until(ExpectedConditions.elementToBeClickable(By.xpath("/html/body/div[1]/div[2]/div[2]/section/div[2]/div/main/form/div[2]/button")));
-                    new Actions(driver).click(convertBtn).perform();
+                //select result string
+                String result = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//*[@id=\"__next\"]/div[2]/div[2]/section/div[2]/div/main/form/div[2]/div[1]/p[2]"))).getText();
 
-                    String result = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//*[@id=\"__next\"]/div[2]/div[2]/section/div[2]/div/main/form/div[2]/div[1]/p[2]"))).getText();
+                //select conversion rate from page
+                String conversionRate = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//*[@id=\"__next\"]/div[2]/div[2]/section/div[2]/div/main/form/div[2]/div[3]/div[1]/div[1]/p"))).getText();
 
-                    String conversionRate = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//*[@id=\"__next\"]/div[2]/div[2]/section/div[2]/div/main/form/div[2]/div[3]/div[1]/div[1]/p"))).getText();
+                //remove characters a-z using regex
+                result = result.replaceAll("([aA-zZ])","");
+                //remove characters before =
+                conversionRate = conversionRate.split("=")[1];
+                conversionRate = conversionRate.replaceAll("([aA-zZ])","");
 
-                    result = result.replaceAll("([aA-zZ])","");
+                //round convert string to float and round up to the 4th nearest deciaml
+                Double resultRounded = (double) Math.round(Float.parseFloat(result)) * 1000d / 100000d;
+                //convert conversion rate to double
+                double doubleConversionRate = Double.parseDouble(conversionRate);
+                //divide conversion rate by 1
+                double validationResult = 1 / doubleConversionRate;
+                Double roundedValidationResult = (double) Math.round(validationResult) * 1000d / 100000d;
+                System.out.println("Result " + resultRounded);
+                System.out.println("converstion rate " + roundedValidationResult);
 
-                    conversionRate = conversionRate.split("=")[1];
-                    conversionRate = conversionRate.replaceAll("([aA-zZ])","");
-
-                    Double resultRounded = (double) Math.round(Float.parseFloat(result) * 100000d) / 10000d;
-                    Double doubleConversionRate = Double.parseDouble(conversionRate);
-                    Double validationResult = 1 / doubleConversionRate;
-                    Double roundedValidationResult =  Math.round(validationResult) * 100000d / 10000d;
-                    System.out.println("Result" + resultRounded);
-                    System.out.println("converstion rate" + roundedValidationResult);
-
-                    Assert.assertEquals(resultRounded,roundedValidationResult);
-                    driver.get("https://www.xe.com/currencyconverter/");
-
-                }
+                //assert to check if both values are equal
+                Assert.assertEquals(resultRounded,roundedValidationResult);
+                driver.get("https://www.xe.com/currencyconverter/");
 
             }
+            //close the dirver
             driver.quit();
     }
 }
